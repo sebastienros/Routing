@@ -248,8 +248,15 @@ namespace Microsoft.AspNetCore.Routing.Tree
                 AddEntryToTree(tree, entry);
             }
 
+            var packedTrees = InboundEntries
+                .GroupBy(entry => entry.Order)
+                .OrderBy(group => group.Key)
+                .Select(group => PackedUrlMatchingTreeBuilder.Build(group, _constraintLogger))
+                .ToArray();
+
             return new TreeRouter(
                 trees.Values.OrderBy(tree => tree.Order).ToArray(),
+                packedTrees,
                 OutboundEntries,
                 _urlEncoder,
                 _objectPool,

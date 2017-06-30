@@ -26,6 +26,7 @@ namespace Microsoft.AspNetCore.Routing.Tree
 
         private readonly LinkGenerationDecisionTree _linkGenerationTree;
         private readonly UrlMatchingTree[] _trees;
+        private readonly PackedUrlMatchingTree[] _packedTrees;
         private readonly IDictionary<string, OutboundMatch> _namedEntries;
 
         private readonly ILogger _logger;
@@ -35,6 +36,7 @@ namespace Microsoft.AspNetCore.Routing.Tree
         /// Creates a new <see cref="TreeRouter"/>.
         /// </summary>
         /// <param name="trees">The list of <see cref="UrlMatchingTree"/> that contains the route entries.</param>
+        /// <param name="packedTrees">TODO</param>
         /// <param name="linkGenerationEntries">The set of <see cref="OutboundRouteEntry"/>.</param>
         /// <param name="urlEncoder">The <see cref="UrlEncoder"/>.</param>
         /// <param name="objectPool">The <see cref="ObjectPool{T}"/>.</param>
@@ -44,6 +46,7 @@ namespace Microsoft.AspNetCore.Routing.Tree
         /// <param name="version">The version of this route.</param>
         public TreeRouter(
             UrlMatchingTree[] trees,
+            PackedUrlMatchingTree[] packedTrees,
             IEnumerable<OutboundRouteEntry> linkGenerationEntries,
             UrlEncoder urlEncoder,
             ObjectPool<UriBuildingContext> objectPool,
@@ -54,6 +57,11 @@ namespace Microsoft.AspNetCore.Routing.Tree
             if (trees == null)
             {
                 throw new ArgumentNullException(nameof(trees));
+            }
+
+            if (packedTrees == null)
+            {
+                throw new ArgumentNullException(nameof(packedTrees));
             }
 
             if (linkGenerationEntries == null)
@@ -82,6 +90,7 @@ namespace Microsoft.AspNetCore.Routing.Tree
             }
 
             _trees = trees;
+            _packedTrees = packedTrees;
             _logger = routeLogger;
             _constraintLogger = constraintLogger;
 
@@ -172,8 +181,19 @@ namespace Microsoft.AspNetCore.Routing.Tree
         }
 
         /// <inheritdoc />
-        public async Task RouteAsync(RouteContext context)
+        public Task RouteAsync(RouteContext context)
         {
+            foreach (var packedTree in _packedTrees)
+            {
+                if (packedTree.Route(context, this))
+                {
+                    break;
+                }
+            }
+
+            return Task.CompletedTask;
+
+            /*
             foreach (var tree in _trees)
             {
                 var tokenizer = new PathTokenizer(context.HttpContext.Request.Path);
@@ -231,6 +251,7 @@ namespace Microsoft.AspNetCore.Routing.Tree
                     }
                 }
             }
+            */
         }
 
         private struct TreeEnumerator : IEnumerator<UrlMatchingNode>
