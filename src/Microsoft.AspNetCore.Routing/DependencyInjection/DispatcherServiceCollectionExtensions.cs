@@ -11,6 +11,19 @@ namespace Microsoft.Extensions.DependencyInjection
 {
     public static class DispatcherServiceCollectionExtensions
     {
+        public static IServiceCollection AddLinkGeneration(this IServiceCollection services)
+        {
+            if (services == null)
+            {
+                throw new ArgumentNullException(nameof(services));
+            }
+
+            services.TryAddSingleton<IEndpointFinder, DefaultEndpointFinder>();
+            services.TryAddSingleton<ILinkGenerator, DefaultLinkGenerator>();
+
+            return services;
+        }
+
         public static IServiceCollection AddDispatcher(this IServiceCollection services)
         {
             if (services == null)
@@ -32,6 +45,8 @@ namespace Microsoft.Extensions.DependencyInjection
             // Default matcher implementation
             //
             services.TryAddSingleton<MatcherFactory, TreeMatcherFactory>();
+
+            services.AddLinkGeneration();
 
             return services;
         }
