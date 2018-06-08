@@ -16,7 +16,7 @@ namespace Microsoft.AspNetCore.Routing.Matchers
     {
         private MatcherEndpoint CreateEndpoint(string template, int order, object values = null)
         {
-            return new MatcherEndpoint((next) => null, template, values, order, EndpointMetadataCollection.Empty, template);
+            return new MatcherEndpoint((next) => null, template, values, order, EndpointMetadataCollection.Empty, template, address: null);
         }
 
         private TreeMatcher CreateTreeMatcher(EndpointDataSource endpointDataSource)
