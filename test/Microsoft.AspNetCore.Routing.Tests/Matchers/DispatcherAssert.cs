@@ -20,6 +20,11 @@ namespace Microsoft.AspNetCore.Routing.Matchers
                 throw new XunitException($"Was expected to match '{expected.DisplayName}' but did not match.");
             }
 
+            if (feature.Values == null)
+            {
+                throw new XunitException("Values is null.");
+            }
+
             if (!object.ReferenceEquals(expected, feature.Endpoint))
             {
                 throw new XunitException(

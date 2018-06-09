@@ -14,7 +14,7 @@ namespace Microsoft.AspNetCore.Routing.Matchers
         internal abstract Matcher CreateMatcher(MatcherEndpoint endpoint);
 
         [Fact]
-        public virtual async Task Match_SingleLiteralSegment_Success()
+        public virtual async Task Match_SingleLiteralSegment()
         {
             // Arrange
             var (matcher, endpoint) = CreateMatcher("/simple");
@@ -27,15 +27,121 @@ namespace Microsoft.AspNetCore.Routing.Matchers
             DispatcherAssert.AssertMatch(feature, endpoint);
         }
 
+        [Fact]
+        public virtual async Task Match_SingleLiteralSegment_TrailingSlash()
+        {
+            // Arrange
+            var (matcher, endpoint) = CreateMatcher("/simple");
+            var (httpContext, feature) = CreateContext("/simple/");
+
+            // Act
+            await matcher.MatchAsync(httpContext, feature);
+
+            // Assert
+            DispatcherAssert.AssertMatch(feature, endpoint);
+        }
+
+        [Theory]
+        [InlineData("/simple")]
+        [InlineData("/sImpLe")]
+        [InlineData("/SIMPLE")]
+        public virtual async Task Match_SingleLiteralSegment_CaseInsensitive(string path)
+        {
+            // Arrange
+            var (matcher, endpoint) = CreateMatcher("/Simple");
+            var (httpContext, feature) = CreateContext(path);
+
+            // Act
+            await matcher.MatchAsync(httpContext, feature);
+
+            // Assert
+            DispatcherAssert.AssertMatch(feature, endpoint);
+        }
+
+        // Some matchers will optimize for the ASCII case
+        [Theory]
+        [InlineData("/SÏmple", "/SÏmple")]
+        [InlineData("/ab\uD834\uDD1Ecd", "/ab\uD834\uDD1Ecd")] // surrogate pair
+        public virtual async Task Match_SingleLiteralSegment_Unicode(string template, string path)
+        {
+            // Arrange
+            var (matcher, endpoint) = CreateMatcher(template);
+            var (httpContext, feature) = CreateContext(path);
+
+            // Act
+            await matcher.MatchAsync(httpContext, feature);
+
+            // Assert
+            DispatcherAssert.AssertMatch(feature, endpoint);
+        }
+
+        // Matchers should operate on the decoded representation - a matcher that calls 
+        // `httpContext.Request.Path.ToString()` will break this test.
+        [Theory]
+        [InlineData("/S%mple", "/S%mple")]
+        [InlineData("/S\\imple", "/S\\imple")] // surrogate pair
+        public virtual async Task Match_SingleLiteralSegment_PercentEncoded(string template, string path)
+        {
+            // Arrange
+            var (matcher, endpoint) = CreateMatcher(template);
+            var (httpContext, feature) = CreateContext(path);
+
+            // Act
+            await matcher.MatchAsync(httpContext, feature);
+
+            // Assert
+            DispatcherAssert.AssertMatch(feature, endpoint);
+        }
+
+
+        [Theory]
+        [InlineData("/imple")]
+        [InlineData("/siple")]
+        [InlineData("/simple1")]
+        public virtual async Task NotMatch_SingleLiteralSegment(string path)
+        {
+            // Arrange
+            var (matcher, endpoint) = CreateMatcher("/simple");
+            var (httpContext, feature) = CreateContext(path);
+
+            // Act
+            await matcher.MatchAsync(httpContext, feature);
+
+            // Assert
+            DispatcherAssert.AssertNotMatch(feature);
+        }
+
         [Theory]
         [InlineData("simple")]
         [InlineData("/simple")]
         [InlineData("~/simple")]
-        public virtual async Task Match_Sanitizies_TemplatePrefix(string template)
+        public virtual async Task Match_Sanitizies_Template(string template)
         {
             // Arrange
             var (matcher, endpoint) = CreateMatcher(template);
             var (httpContext, feature) = CreateContext("/simple");
+
+            // Act
+            await matcher.MatchAsync(httpContext, feature);
+
+            // Assert
+            DispatcherAssert.AssertMatch(feature, endpoint);
+        }
+
+        // Matchers do their own 'splitting' of the path into segments, so including
+        // some extra variation here
+        [Theory]
+        [InlineData("/a/b", "/a/b")]
+        [InlineData("/a/b", "/a/b/")]
+        [InlineData("/a/b/c", "/a/b/c")]
+        [InlineData("/a/b/c", "/a/b/c/")]
+        [InlineData("/a/b/c/d", "/a/b/c/d")]
+        [InlineData("/a/b/c/d", "/a/b/c/d/")]
+        public virtual async Task Match_MultipleLiteralSegments(string template, string path)
+        {
+            // Arrange
+            var (matcher, endpoint) = CreateMatcher(template);
+            var (httpContext, feature) = CreateContext(path);
 
             // Act
             await matcher.MatchAsync(httpContext, feature);

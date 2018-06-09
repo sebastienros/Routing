@@ -3,11 +3,11 @@
 
 namespace Microsoft.AspNetCore.Routing.Matchers
 {
-    public class TreeRouterMatcherConformanceTest : MatcherConformanceTest
+    public class DfaMatcherConformanceTest : MatcherConformanceTest
     {
         internal override Matcher CreateMatcher(MatcherEndpoint endpoint)
         {
-            var builder = new TreeRouterMatcherBuilder();
+            var builder = new DfaMatcherBuilder();
             builder.AddEndpoint(endpoint);
             return builder.Build();
         }
