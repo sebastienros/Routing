@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Routing.Template;
 
 namespace Microsoft.AspNetCore.Routing.Matchers
 {
@@ -31,6 +32,7 @@ namespace Microsoft.AspNetCore.Routing.Matchers
 
             Invoker = invoker;
             Template = template;
+            RouteTemplate = TemplateParser.Parse(template);
             Values = new RouteValueDictionary(values);
             Order = order;
             Address = address;
@@ -39,7 +41,7 @@ namespace Microsoft.AspNetCore.Routing.Matchers
         public int Order { get; }
         public Func<RequestDelegate, RequestDelegate> Invoker { get; }
         public string Template { get; }
-
+        public RouteTemplate RouteTemplate { get; }
         public IReadOnlyDictionary<string, object> Values { get; }
 
         public Address Address { get; }
