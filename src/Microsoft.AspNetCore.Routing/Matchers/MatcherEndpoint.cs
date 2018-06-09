@@ -18,7 +18,7 @@ namespace Microsoft.AspNetCore.Routing.Matchers
             EndpointMetadataCollection metadata,
             string displayName,
             Address address)
-            : base(metadata, displayName)
+            : base(metadata, displayName, address)
         {
             if (invoker == null)
             {
@@ -35,7 +35,6 @@ namespace Microsoft.AspNetCore.Routing.Matchers
             RouteTemplate = TemplateParser.Parse(template);
             Values = new RouteValueDictionary(values);
             Order = order;
-            Address = address;
         }
 
         public int Order { get; }
@@ -43,7 +42,5 @@ namespace Microsoft.AspNetCore.Routing.Matchers
         public string Template { get; }
         public RouteTemplate RouteTemplate { get; }
         public IReadOnlyDictionary<string, object> Values { get; }
-
-        public Address Address { get; }
     }
 }
